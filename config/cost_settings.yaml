@@ -1,0 +1,23 @@
+simulation_settings:
+  currency: "EUR"
+  time_horizon_years: 20
+  random_seed: 42
+
+# KPI definitions are fully generic: add as many entries as needed.
+# Phase 1 activates only the two below, but the engine handles any number.
+kpi_definitions:
+  market_share_pct:
+    higher_is_better: true
+    cost_function_type: "quadratic"
+    alpha: 1500000
+    allow_worsening: false
+    drift_noise_std: 0.02      # std dev of annual random perturbation (fraction of current state)
+    passive_decay_rate: -0.01  # mean annual drift applied when no investment is made
+
+  unit_production_cost:
+    higher_is_better: false
+    cost_function_type: "linear"
+    alpha: 800000
+    allow_worsening: false
+    drift_noise_std: 0.015
+    passive_decay_rate: 0.01   # costs organically creep up 1%/year if untouched
