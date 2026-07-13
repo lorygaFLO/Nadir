@@ -26,11 +26,33 @@ Every KPI is mapped to a customizable cost function based on its percentage vari
   $$C(\Delta\%) = \alpha \cdot |\Delta\%|$$
   Effort maps linearly to the change rate.
 * **Symmetry Profiles:** Defined per KPI. *Symmetric* means both degradation and improvement carry structural costs. *Asymmetric* allows degradation to occur at zero cost (enforced via non-negativity boundary constraints $\Delta\% \ge 0$).
+* **Role of Cost:** Cost functions are effort proxies — they quantify the investment required to achieve a given KPI change. They are **not** the optimization objective. They define the budget constraint or price of a chosen trajectory.
 
-### D. The Optimization Problem
-Given a specific subject ("Focus") at $t=0$, the optimizer must find a sequence of annual variations $\Delta\%_{t}$ across all KPIs to:
-$$\text{Minimize } \sum_{t=1}^{T} \text{Cost}_t(\Delta\%_t)$$
-Subject to the boundary condition that at final time $T$, the Focus subject's state profile successfully joins the Efficient Frontier or completely dominates a chosen competitor target.
+### D. The Optimization Problem & Performance Metric
+
+The true objective is to maximize the **competitive standing** of the Focus subject, measured via a signed Euclidean distance metric $\mathcal{D}$ relative to the full competitor field. Cost quantifies the effort required and enters the problem as a budget constraint, not as the objective to minimize.
+
+**Signed Euclidean Distance Metric:**
+
+For each competitor $C_j$, a signed distance is computed in the normalized KPI space:
+$$d_j(s) = \sigma(s, C_j) \cdot \|s - C_j\|_2$$
+where the sign $\sigma$ encodes the dominance relation:
+$$\sigma(s, C_j) = \begin{cases} +1 & \text{if } s \succ C_j \text{ (Focus dominates)} \\ -1 & \text{if } C_j \succ s \text{ (Focus is dominated)} \\ -1 & \text{if } s \parallel C_j \text{ (incomparable)} \end{cases}$$
+The aggregate performance metric at time $t$ is:
+$$\mathcal{D}(s_t) = \sum_{j} d_j(s_t)$$
+A positive $\mathcal{D}$ means the Focus subject is, on net, a dominator across the field. A negative $\mathcal{D}$ means it is dominated or isolated.
+
+**Optimization Formulations (selectable by the user):**
+
+1. **Budget Mode:** Given a fixed total cost budget $B$, find the trajectory that maximizes $\mathcal{D}$ at final time $T$:
+   $$\max_{\{\Delta\%_t\}} \mathcal{D}(s_T) \quad \text{s.t.} \quad \sum_{t=1}^{T} \text{Cost}_t(\Delta\%_t) \leq B$$
+2. **Target Mode:** Given a target $\mathcal{D}^*$, find the minimum-cost trajectory to reach it:
+   $$\min_{\{\Delta\%_t\}} \sum_{t=1}^{T} \text{Cost}_t(\Delta\%_t) \quad \text{s.t.} \quad \mathcal{D}(s_T) \geq \mathcal{D}^*$$
+   The target $\mathcal{D}^*$ can be:
+   * **User-defined:** an explicit numerical threshold.
+   * **Auto-deduced:** derived from the current $\mathcal{D}$ value of the nearest Pareto-efficient competitor, i.e., the minimum $\mathcal{D}^*$ required to reach the Efficient Frontier.
+
+Reaching the Efficient Frontier is equivalent to $\mathcal{D}(s_T) \geq 0$ against every competitor simultaneously.
 
 ### E. Stochastic KPI Drift
 To reflect real-world unpredictability, each KPI can be assigned an optional noise profile that introduces a stochastic component to its annual state evolution:
@@ -68,6 +90,8 @@ To reflect real-world unpredictability, each KPI can be assigned an optional noi
 ### B. `core/optimizer.py` (The Search & Planning Layer)
 * **Class `MultiPeriodPlanner`**: Houses execution logic for solver models.
 * **Mechanics**: Runs a numerical multi-variable solver (such as `scipy.optimize.minimize` using `SLSQP`).
+* **Objective:** In Budget Mode, maximizes $\mathcal{D}(s_T)$; in Target Mode, minimizes total cost subject to $\mathcal{D}(s_T) \geq \mathcal{D}^*$. The mode is selected via config.
+* **Distance Engine:** Computes the signed Euclidean distance metric $\mathcal{D}$ by querying `PosetEngine.evaluate_dominance()` at each solver iteration to assign the correct sign per competitor pair.
 * **Factory Pattern**: A structural factory must ingest string tokens (`"quadratic"`, `"linear"`) from the configuration layer and map them directly to numerical cost math functions, bypassing arbitrary code execution strings.
 * **Stochastic Sampling**: Instantiates a seeded `numpy.random.Generator` at runtime using the global `random_seed` from config. Per-KPI noise draws are consumed deterministically in period order, ensuring reproducible multi-period trajectories.
 
