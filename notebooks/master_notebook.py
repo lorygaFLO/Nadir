@@ -1,6 +1,10 @@
-"""Phase 1 sandbox: PosetEngine validation on synthetic data.
+"""Phase 1 user data: PosetEngine simulation on a user-provided dataset.
 
-Run with:  marimo edit notebooks/phase1_sandbox.py
+Loads a CSV/Parquet file with columns SUBJECT | TIME | <KPI...> (uppercase,
+matching the YAML kpi_definitions). The latest observed TIME becomes the
+simulation starting point (t=0).
+
+Run with:  marimo edit notebooks/phase1_user_data.py
 """
 
 import marimo
@@ -15,14 +19,13 @@ def _():
     from pathlib import Path
 
     import marimo as mo
-    import numpy as np
     import yaml
 
     project_root = Path(str(mo.notebook_dir())).resolve().parent
     if str(project_root) not in sys.path:
         sys.path.insert(0, str(project_root))
 
-    from core.dataset import extract_snapshot
+    from core.dataset import extract_snapshot, load_subject_dataset
     from core.poset import KpiSpec, PosetEngine
     from core.simulation import simulate_history
     from core.viz import plot_hasse, plot_kpi_plane
@@ -31,8 +34,8 @@ def _():
         KpiSpec,
         PosetEngine,
         extract_snapshot,
+        load_subject_dataset,
         mo,
-        np,
         plot_hasse,
         plot_kpi_plane,
         project_root,
@@ -57,10 +60,64 @@ def _(KpiSpec, project_root, yaml):
 
 
 @app.cell
-def _(kpi_specs, mo):
-    n_subjects_slider = mo.ui.slider(
-        4, 20, value=8, step=1, label="Number of synthetic subjects"
+def _(mo, project_root):
+    dataset_path_input = mo.ui.text(
+        value=str(project_root / "data" / "example_subjects.csv"),
+        label="Dataset path (.csv or .parquet)",
+        full_width=True,
     )
+    mo.vstack(
+        [
+            mo.md("## Phase 1 — Simulation on User Data"),
+            dataset_path_input,
+        ]
+    )
+    return (dataset_path_input,)
+
+
+@app.cell
+def _(dataset_path_input, kpi_specs, load_subject_dataset, mo):
+    _error = None
+    dataset_df = None
+    try:
+        dataset_df = load_subject_dataset(str(dataset_path_input.value), kpi_specs)
+    except (OSError, ValueError) as exc:
+        _error = str(exc)
+
+    mo.stop(
+        dataset_df is None,
+        mo.md(f"⚠️ **Cannot load dataset:** {_error}"),
+    )
+    mo.vstack(
+        [
+            mo.md(
+                f"Loaded **{dataset_df['SUBJECT'].n_unique()} subjects** × "
+                f"**{dataset_df['TIME'].n_unique()} periods** "
+                f"(latest observed TIME = {dataset_df['TIME'].max()})."
+            ),
+            mo.ui.table(dataset_df, selection=None, page_size=8),
+        ]
+    )
+    return (dataset_df,)
+
+
+@app.cell
+def _(PosetEngine, dataset_df, extract_snapshot, kpi_specs, mo):
+    # Simulation starts from the latest observed snapshot of the user data.
+    initial_states = extract_snapshot(dataset_df, kpi_specs)
+
+    _baseline = PosetEngine(kpi_specs=kpi_specs, subjects=dict(initial_states))
+    focus_dropdown = mo.ui.dropdown(
+        sorted(initial_states),
+        value=_baseline.get_most_dominated_element(),
+        label="Focus subject (our guy; default = most dominated)",
+    )
+    focus_dropdown
+    return focus_dropdown, initial_states
+
+
+@app.cell
+def _(focus_dropdown, kpi_specs, mo):
     # One improvement-rate slider per KPI: automatically scales beyond two KPIs.
     improvement_sliders = mo.ui.dictionary(
         {
@@ -85,37 +142,21 @@ def _(kpi_specs, mo):
         value=_names[1] if len(_names) > 1 else _names[0],
         label="Scatter Y-axis KPI",
     )
+    focus_subject = str(focus_dropdown.value)
     mo.vstack(
         [
-            mo.md("## Phase 1 Sandbox — Poset Engine Validation"),
-            n_subjects_slider,
             improvement_sliders,
             jitter_slider,
             mo.hstack([x_kpi_dropdown, y_kpi_dropdown], justify="start"),
         ]
     )
     return (
+        focus_subject,
         improvement_sliders,
         jitter_slider,
-        n_subjects_slider,
         x_kpi_dropdown,
         y_kpi_dropdown,
     )
-
-
-@app.cell
-def _(PosetEngine, kpi_specs, n_subjects_slider, np, random_seed):
-    # Reproducible synthetic population: uniform draws per KPI.
-    gen_rng = np.random.default_rng(random_seed)
-    n_subjects = int(n_subjects_slider.value)
-    initial_states = {
-        f"S{i + 1:02d}": gen_rng.uniform(50.0, 150.0, size=len(kpi_specs))
-        for i in range(n_subjects)
-    }
-
-    baseline_engine = PosetEngine(kpi_specs=kpi_specs, subjects=dict(initial_states))
-    focus_subject = baseline_engine.get_most_dominated_element()
-    return focus_subject, initial_states
 
 
 @app.cell
