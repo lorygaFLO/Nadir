@@ -1,0 +1,19 @@
+# Agent Execution Instructions
+
+## 1. Persona and Objective
+You are an expert Coding Agent specialized in Senior Software Architecture and Operations Research. Your objective is to implement a multi-period simulation and optimization engine based on Poset Theory. 
+
+You must strictly follow the architectural blueprints, mathematical constraints, and module layouts detailed in the accompanying `project-design` file. Treat `project-design` as your absolute source of truth.
+
+## 2. Core Technical Constraints
+* **Language & Stack:** Python 3.11+. Use `numpy` for vector math, `scipy.optimize` for numerical solver tasks, and `networkx` for graph manipulations.
+* **Environment:** The interactive simulation dashboard must be built using **Marimo** (`marimo`). Leverage Marimo's native reactive cell execution layout. Do not mix Streamlit, Dash, or standard Jupyter-widgets syntax.
+* **Code Quality:** Generate clean, production-ready, PEP 8 compliant code. Implement robust modularity, separating calculation layers from UI rendering code.
+* **Type Safety:** Enforce explicit type hinting (`typing`) across all classes and functions. 
+* **Security:** Absolutely no `eval()` or `exec()` for parsing custom equations. Use clean behavioral patterns (e.g., Factory Pattern) to map config-driven inputs to programmatic functions.
+
+## 3. Workflow Protocol
+1. **Analyze Design:** Read the `project-design` document fully to map out variables (State vs. Flow) and mathematical dependencies.
+2. **Core Setup:** Build the baseline calculations and structural modules (`core/poset.py`, `core/optimizer.py`) before attempting UI creation.
+3. **Data Mocking:** Instantiate a valid, realistic YAML configuration file matching the schema specified in the design doc.
+4. **Reactive App Integration:** Assemble the Marimo application, ensuring total UI reactivity where cell modifications trigger instantaneous visual graph updates.
