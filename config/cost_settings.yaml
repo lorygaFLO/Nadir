@@ -1,7 +1,8 @@
 simulation_settings:
   currency: "EUR"
-  time_horizon_years: 20
+  time_horizon_years: 100
   random_seed: 42
+  annual_budget: 50000   # default yearly investment for the Focus subject
 
 # KPI definitions are fully generic: add as many entries as needed.
 # Phase 1 activates only the two below, but the engine handles any number.

@@ -164,3 +164,32 @@ def plot_kpi_plane(
     fig.update_xaxes(gridcolor="#eeeeee")
     fig.update_yaxes(gridcolor="#eeeeee")
     return fig
+
+
+def plot_allocations(
+    allocations: pl.DataFrame,
+    kpi_specs: Sequence[KpiSpec],
+    currency: str = "EUR",
+) -> go.Figure:
+    """Stacked bars of yearly budget deployment per KPI (planning stream)."""
+    fig = go.Figure()
+    periods = allocations[TIME_COL].to_list()
+    for spec in kpi_specs:
+        fig.add_trace(
+            go.Bar(
+                x=periods,
+                y=allocations[spec.name.upper()].to_list(),
+                name=spec.name,
+            )
+        )
+    fig.update_layout(
+        barmode="stack",
+        title=f"Planned budget deployment ({currency}/year)",
+        xaxis_title="Period t",
+        yaxis_title=f"Budget ({currency})",
+        plot_bgcolor="white",
+        height=400,
+        margin={"l": 60, "r": 20, "t": 60, "b": 40},
+    )
+    fig.update_yaxes(gridcolor="#eeeeee")
+    return fig
