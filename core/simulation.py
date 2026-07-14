@@ -71,7 +71,6 @@ def simulate_history(
     jitter_std: float | None = None,
     allocation_weights: Mapping[str, float] | None = None,
     adaptive: bool = False,
-    positive_cap: float | None = 0.0,
 ) -> tuple[pl.DataFrame, pl.DataFrame]:
     """Simulate ``horizon`` periods; return ``(history, allocations)``.
 
@@ -81,10 +80,10 @@ def simulate_history(
     favourable direction.
 
     With ``adaptive=True`` the split is re-optimized **every period**
-    against the current field state (signed distance metric D, positive
-    contributions clamped at ``positive_cap``), so budget flows to the
-    KPIs where the focus still lags. Otherwise the static
-    ``allocation_weights`` (default equal split) are used throughout.
+    against the current field state (projected-gap signed distance
+    metric D), so budget flows to the KPIs where the focus still lags.
+    Otherwise the static ``allocation_weights`` (default equal split)
+    are used throughout.
 
     Every other subject receives seeded Gaussian jitter with std
     ``jitter_std`` and no passive decay; ``jitter_std=None`` (or ``0``)
@@ -130,7 +129,6 @@ def simulate_history(
                 engine.subjects,
                 focus_subject,
                 budget_t,
-                positive_cap=positive_cap,
             )
         alloc_rows.append(
             {

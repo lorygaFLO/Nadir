@@ -274,9 +274,14 @@ def _(
 
 
 @app.cell
-def _(allocations_df, currency, kpi_specs, mo, plot_allocations):
-    # Planning stream: how the budget is actually deployed year by year.
-    mo.ui.plotly(plot_allocations(allocations_df, kpi_specs, currency))
+def _(allocations_df, currency, kpi_specs, mo, period_slider, plot_allocations):
+    # Planning stream: how the budget is actually deployed year by year,
+    # truncated to the period selected above.
+    mo.ui.plotly(
+        plot_allocations(
+            allocations_df, kpi_specs, currency, t=int(period_slider.value)
+        )
+    )
     return
 
 

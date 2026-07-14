@@ -1,16 +1,25 @@
 """Signed Euclidean distance metric (design doc, Section D).
 
-For a focus subject ``s`` and each competitor ``C_j`` a signed distance
-is computed in the min-max normalized, polarity-oriented KPI space:
+For a focus subject ``s`` and each competitor ``C_j`` the distance is
+computed in the min-max normalized, polarity-oriented KPI space, but
+**projected onto the subspace of KPIs where the focus still lags**
+behind ``C_j``:
 
-    d_j(s) = sigma(s, C_j) * ||s - C_j||_2
+    lag_dims(s, C_j) = {k : oriented(s)_k < oriented(C_j)_k}
+    d_j(s) = -||s - C_j||_2 restricted to lag_dims(s, C_j)
 
-with sigma = +1 if the focus dominates C_j, -1 if it is dominated or
-incomparable, 0 if identical. The aggregate metric is D(s) = sum_j d_j.
+If ``lag_dims`` is empty (the focus dominates or ties ``C_j`` on every
+KPI) ``d_j = 0``: there is nothing left to gain from that competitor.
+Otherwise ``d_j`` is always <= 0, reflecting the remaining gap. The
+aggregate metric is D(s) = sum_j d_j.
 
-Normalization matters twice: it makes KPIs with different scales
-commensurable, and it caps the reward for overshooting a KPI the focus
-already leads (min-max pins the best subject at 1 regardless of margin).
+This projection is what keeps the optimizer from chasing 'easy' KPIs
+the focus already leads on: only the dimensions where the focus is
+behind a given competitor contribute to that competitor's term, so
+further improving an already-won KPI cannot manufacture extra score.
+
+Normalization still matters to make KPIs with different scales
+commensurable before measuring the projected gap.
 """
 
 from __future__ import annotations
@@ -64,7 +73,12 @@ def signed_distances(
     focus_subject: str,
     normalization: tuple[np.ndarray, np.ndarray] | None = None,
 ) -> dict[str, float]:
-    """Per-competitor signed Euclidean distance from the focus subject.
+    """Per-competitor projected-gap distance from the focus subject.
+
+    For each competitor, the distance is measured only across the KPIs
+    where the focus still lags (see module docstring); it is always
+    <= 0, and exactly 0 once the focus dominates or ties that
+    competitor on every KPI.
 
     ``normalization`` optionally provides frozen ``(lo, span)`` bounds in
     oriented space (see ``oriented_bounds``); by default bounds are
@@ -82,17 +96,12 @@ def signed_distances(
     for j, name in enumerate(names):
         if name == focus_subject:
             continue
-        focus_ge = bool(np.all(oriented[i] >= oriented[j]))
-        comp_ge = bool(np.all(oriented[j] >= oriented[i]))
-        if focus_ge and comp_ge:
-            sigma = 0.0  # identical states
-        elif focus_ge:
-            sigma = 1.0  # focus dominates
-        else:
-            sigma = -1.0  # dominated or incomparable
-        distances[name] = sigma * float(
-            np.linalg.norm(normalized[i] - normalized[j])
-        )
+        lagging = oriented[i] < oriented[j]
+        if not lagging.any():
+            distances[name] = 0.0
+            continue
+        gap = normalized[i][lagging] - normalized[j][lagging]
+        distances[name] = -float(np.linalg.norm(gap))
     return distances
 
 
@@ -100,20 +109,14 @@ def aggregate_signed_distance(
     subjects: Mapping[str, np.ndarray],
     kpi_specs: Sequence[KpiSpec],
     focus_subject: str,
-    positive_cap: float | None = None,
     normalization: tuple[np.ndarray, np.ndarray] | None = None,
 ) -> float:
-    """Aggregate metric D = sum of signed distances.
+    """Aggregate metric D = sum of per-competitor projected-gap distances.
 
-    ``positive_cap`` clamps each positive (dominating) contribution:
-    ``positive_cap=0.0`` means beating a competitor further gains
-    nothing — the natural choice when the goal is reaching the Pareto
-    frontier rather than maximizing margin. ``None`` leaves the raw
-    design-doc metric untouched.
+    Always <= 0; it reaches 0 once the focus dominates or ties every
+    competitor on every KPI (the Pareto frontier).
     """
     values = signed_distances(
         subjects, kpi_specs, focus_subject, normalization=normalization
     ).values()
-    if positive_cap is None:
-        return float(sum(values))
-    return float(sum(min(v, positive_cap) for v in values))
+    return float(sum(values))

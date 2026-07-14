@@ -37,21 +37,30 @@ class TestSignedDistances:
         d = signed_distances(subjects, KPI_SPECS, "F")
         assert d["R"] < 0
 
-    def test_dominating_focus_is_positive(self) -> None:
+    def test_dominating_focus_scores_zero(self) -> None:
         subjects = {
             "F": np.array([20.0, 80.0]),
             "R": np.array([10.0, 100.0]),
         }
         d = signed_distances(subjects, KPI_SPECS, "F")
-        assert d["R"] > 0
+        assert d["R"] == 0.0
 
-    def test_incomparable_counts_negative(self) -> None:
+    def test_incomparable_ignores_leading_dims(self) -> None:
+        # F leads on share (not a lag dim) but lags on cost: only the
+        # cost gap should contribute, matching a focus that lags on
+        # cost alone.
         subjects = {
             "F": np.array([20.0, 100.0]),  # better share, worse cost
             "R": np.array([10.0, 80.0]),
         }
+        only_cost_lag = {
+            "F": np.array([10.0, 100.0]),
+            "R": np.array([10.0, 80.0]),
+        }
         d = signed_distances(subjects, KPI_SPECS, "F")
+        d_cost_only = signed_distances(only_cost_lag, KPI_SPECS, "F")
         assert d["R"] < 0
+        assert d["R"] == pytest.approx(d_cost_only["R"])
 
     def test_identical_states_are_zero(self) -> None:
         subjects = {
@@ -70,16 +79,12 @@ class TestSignedDistances:
         d_scaled = aggregate_signed_distance(scaled, KPI_SPECS, "F")
         assert d_original == pytest.approx(d_scaled)
 
-    def test_positive_cap_clamps_dominating_terms(self) -> None:
+    def test_dominating_every_competitor_scores_zero(self) -> None:
         subjects = {
             "F": np.array([20.0, 80.0]),
             "R": np.array([10.0, 100.0]),
         }
-        assert aggregate_signed_distance(subjects, KPI_SPECS, "F") > 0
-        assert (
-            aggregate_signed_distance(subjects, KPI_SPECS, "F", positive_cap=0.0)
-            == 0.0
-        )
+        assert aggregate_signed_distance(subjects, KPI_SPECS, "F") == 0.0
 
 
 class TestOptimizeAllocation:

@@ -3,9 +3,9 @@
 Each period, chooses the budget split across KPIs that maximizes the
 signed distance metric D of the *next* state (myopic one-step search on
 the allocation simplex). This is the feedback loop that stops the focus
-subject from over-investing in KPIs it already leads: with min-max
-normalization and a positive cap, budget flows to the KPIs where the
-focus is still behind.
+subject from over-investing in KPIs it already leads: the projected-gap
+distance (see ``core.metrics``) only rewards progress on KPIs where the
+focus is still behind a competitor, so budget naturally flows there.
 
 The full multi-period ``MultiPeriodPlanner`` (joint trajectory
 optimization) is a Phase 2 concern; this module deliberately stays
@@ -50,7 +50,6 @@ def optimize_allocation(
     subjects: Mapping[str, np.ndarray],
     focus_subject: str,
     budget: float,
-    positive_cap: float | None = 0.0,
 ) -> dict[str, float]:
     """Budget shares (summing to 1) that maximize next-period D.
 
@@ -84,7 +83,6 @@ def optimize_allocation(
             trial,
             kpi_specs,
             focus_subject,
-            positive_cap=positive_cap,
             normalization=bounds,
         )
         if score > best_score:

@@ -170,8 +170,16 @@ def plot_allocations(
     allocations: pl.DataFrame,
     kpi_specs: Sequence[KpiSpec],
     currency: str = "EUR",
+    t: int | None = None,
 ) -> go.Figure:
-    """Stacked bars of yearly budget deployment per KPI (planning stream)."""
+    """Stacked bars of yearly budget deployment per KPI (planning stream).
+
+    Restricted to periods up to ``t`` when provided, mirroring
+    ``plot_kpi_plane``'s trail truncation so the chart stays in sync with
+    the selected simulation period.
+    """
+    if t is not None:
+        allocations = allocations.filter(pl.col(TIME_COL) <= t)
     fig = go.Figure()
     periods = allocations[TIME_COL].to_list()
     for spec in kpi_specs:
