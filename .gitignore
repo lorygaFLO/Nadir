@@ -179,3 +179,8 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# marimo
+#  Per-notebook session state/cache written by `marimo edit`; not source code,
+#  regenerated locally, so it shouldn't be versioned.
+notebooks/__marimo__/
