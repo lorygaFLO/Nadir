@@ -1,8 +1,9 @@
 """Phase 1 user data: PosetEngine simulation on a user-provided dataset.
 
 Loads a CSV/Parquet file with columns SUBJECT | TIME | <KPI...> (uppercase,
-matching the YAML kpi_definitions). The latest observed TIME becomes the
-simulation starting point (t=0).
+matching the YAML kpi_definitions). The earliest observed TIME (t=0) is the
+simulation starting point; competitors then follow their real recorded
+trajectory for every later period the dataset covers.
 
 Run with:  marimo edit notebooks/phase1_user_data.py
 """
@@ -84,7 +85,7 @@ def _(CostFunctionSpec, KpiSpec, project_root, yaml):
 @app.cell
 def _(mo, project_root):
     dataset_path_input = mo.ui.text(
-        value=str(project_root / "data" / "example_subjects_complex.csv"),
+        value=str(project_root / "data" / "generated_subjects.csv"),
         label="Dataset path (.csv or .parquet)",
         full_width=True,
     )
@@ -125,8 +126,10 @@ def _(dataset_path_input, kpi_specs, load_subject_dataset, mo):
 
 @app.cell
 def _(PosetEngine, dataset_df, extract_snapshot, kpi_specs, mo):
-    # Simulation starts from the latest observed snapshot of the user data.
-    initial_states = extract_snapshot(dataset_df, kpi_specs)
+    # Counterfactual simulation starts from the earliest observed snapshot
+    # (t=0), so the focus subject's budget-driven path can be compared
+    # period-by-period against competitors' full recorded trajectory.
+    initial_states = extract_snapshot(dataset_df, kpi_specs, time=0)
 
     _baseline = PosetEngine(kpi_specs=kpi_specs, subjects=dict(initial_states))
     focus_dropdown = mo.ui.dropdown(
@@ -167,12 +170,7 @@ def _(currency, default_budget, focus_dropdown, kpi_specs, mo):
             mo.hstack([x_kpi_dropdown, y_kpi_dropdown], justify="start"),
         ]
     )
-    return (
-        budget_input,
-        focus_subject,
-        x_kpi_dropdown,
-        y_kpi_dropdown,
-    )
+    return budget_input, focus_subject, x_kpi_dropdown, y_kpi_dropdown
 
 
 @app.cell
@@ -203,6 +201,11 @@ def _(
     )
     period_budget = _parts[0] if len(_parts) == 1 else _parts
 
+    # Simulation can't run longer than the real data the dataset provides
+    # for competitor replay (starting at t=0), capped by the configured
+    # horizon as an upper bound.
+    sim_horizon = min(time_horizon, int(dataset_df["TIME"].max()))
+
     # Simulate T periods: Focus invests the budget; competitors follow their
     # real recorded trajectory from the input dataset (held constant for any
     # period/subject the dataset doesn't cover).
@@ -212,20 +215,20 @@ def _(
         initial_states=initial_states,
         focus_subject=focus_subject,
         period_budget=period_budget,
-        horizon=time_horizon,
+        horizon=sim_horizon,
         seed=random_seed,
         allocation_weights=None,
         adaptive=True,
         competitor_history=dataset_df,
-        history_start_time=int(dataset_df["TIME"].max()),
+        history_start_time=0,
     )
-    return allocations_df, history_df, period_budget
+    return allocations_df, history_df, period_budget, sim_horizon
 
 
 @app.cell
-def _(mo, time_horizon):
+def _(mo, sim_horizon):
     period_slider = mo.ui.slider(
-        0, time_horizon, value=0, step=1, label="Simulation period t"
+        0, sim_horizon, value=0, step=1, label="Simulation period t"
     )
     period_slider
     return (period_slider,)
@@ -312,15 +315,15 @@ def _(
     mo,
     period_budget,
     resolve_budget_schedule,
-    time_horizon,
+    sim_horizon,
     time_to_frontier,
 ):
     _reach = time_to_frontier(history_df, kpi_specs, focus_subject)
-    _budgets = resolve_budget_schedule(period_budget, time_horizon)
+    _budgets = resolve_budget_schedule(period_budget, sim_horizon)
     if _reach is None:
         _msg = (
             f"❌ **Goal not reached.** `{focus_subject}` never enters the Pareto "
-            f"frontier within {time_horizon} periods, despite a total investment of "
+            f"frontier within {sim_horizon} periods, despite a total investment of "
             f"{sum(_budgets):,.0f} {currency}. Increase the budget, rebalance the "
             "allocation, or extend the horizon."
         )
