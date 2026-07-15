@@ -4,7 +4,7 @@
 
 # Nadir
 
-**Nadir** is a Decision Support System (DSS) designed to solve multi-period trajectory optimization problems. By mapping performance profiles using **Partially Ordered Sets (Posets)** and leveraging **counterfactual simulation**, Nadir helps analysts and systems answer a core strategic question: 
+**Nadir** is a Decision Support System (DSS) designed to solve multi-period trajectory kpi optimization problems. By mapping performance profiles using **Partially Ordered Sets (Posets)** and leveraging **counterfactual simulation**, Nadir helps analysts and systems answer a core strategic question: 
 
 > *"If we control the levers of specific KPIs, how should we schedule investments over time to beat competitors or reach the Pareto efficient frontier at the lowest possible cost?"*
 
@@ -12,7 +12,13 @@ Unlike traditional static benchmarking tools, Nadir acts as a **Geometric Model 
 
 ---
 
-## 🎯 Project Scope
+## � Applications
+
+Nadir is domain-agnostic: it can be applied to any wide range of scenarios where a set of subjects is compared across quantitative KPIs and some form of **competition** exists between them — whichever the nature of the subjects and the KPIs at play. Examples include stocks and other financial instruments, race cars or athletes in a competitive series, companies benchmarked on business metrics, or countries compared on socio-economic indicators.
+
+---
+
+## �🎯 Project Scope
 
 This repository has a dual purpose:
 1. **A ready-to-use engine** for simple, self-contained decision-support applications — computing Pareto frontiers, cost-optimal investment trajectories, and counterfactual simulations directly from tabular KPI data.
