@@ -24,7 +24,6 @@ market_share_pct:
   higher_is_better: true      # polarity
   cost_function_type: "quadratic"
   alpha: 1500000              # cost scale coefficient
-  allow_worsening: false
   drift_noise_std: 0.02       # σ of per-period random perturbation (fraction of state)
   passive_decay_rate: -0.01   # mean per-period drift when no investment is made
 ```
@@ -34,7 +33,6 @@ market_share_pct:
 | `higher_is_better` | poset orientation, metrics, cost direction | See [[02 - Posets and Pareto Dominance#Orientation]] |
 | `cost_function_type` | `CostFunctionSpec` registry | `"quadratic"` or `"linear"` → [[04 - Cost Functions]] |
 | `alpha` | cost curves | Bigger α ⇒ each Δ% costs more |
-| `allow_worsening` | optimizer/simulation guard | Blocks allocations that move the KPI the wrong way |
 | `drift_noise_std` | `PosetEngine.apply_drift` | Std-dev of the stochastic jitter, as fraction of current value |
 | `passive_decay_rate` | `PosetEngine.apply_drift` | Mean drift with **no** investment. Sign is in *raw value space*: `-0.01` on a higher-is-better KPI = erosion; `+0.01` on unit cost = costs creep up 1%/period |
 

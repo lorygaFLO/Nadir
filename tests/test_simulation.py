@@ -24,13 +24,11 @@ COST_SPECS = [
         kpi_name="market_share_pct",
         cost_function_type="quadratic",
         alpha=1_000_000.0,
-        allow_worsening=False,
     ),
     CostFunctionSpec(
         kpi_name="unit_production_cost",
         cost_function_type="linear",
         alpha=500_000.0,
-        allow_worsening=False,
     ),
 ]
 INITIAL = {

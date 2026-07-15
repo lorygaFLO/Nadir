@@ -68,20 +68,11 @@ COST_FUNCTION_FORMULAS: Mapping[str, str] = {
 
 @dataclass(frozen=True)
 class CostFunctionSpec:
-    """Per-KPI cost-function configuration.
-
-    ``allow_worsening`` encodes the KPI's symmetry profile: ``True``
-    (symmetric) means both degradation and improvement carry structural
-    cost; ``False`` (asymmetric) means degradation is not a chargeable
-    decision for this KPI. Enforcing the resulting ``Delta% >= 0``
-    boundary constraint is the responsibility of the optimizer, not of
-    the cost function itself.
-    """
+    """Per-KPI cost-function configuration."""
 
     kpi_name: str
     cost_function_type: str
     alpha: float
-    allow_worsening: bool = True
 
     @classmethod
     def from_config(cls, name: str, cfg: Mapping[str, object]) -> "CostFunctionSpec":
@@ -90,19 +81,7 @@ class CostFunctionSpec:
             kpi_name=name,
             cost_function_type=str(cfg["cost_function_type"]),
             alpha=float(cfg["alpha"]),
-            allow_worsening=bool(cfg.get("allow_worsening", True)),
         )
-
-    def cost(self, delta_pct: float) -> float:
-        """Evaluate the effort/cost for a given Delta% change."""
-        try:
-            fn = COST_FUNCTIONS[self.cost_function_type]
-        except KeyError as exc:
-            raise ValueError(
-                f"Unknown cost_function_type {self.cost_function_type!r} for "
-                f"KPI {self.kpi_name!r}. Available: {list(COST_FUNCTIONS)}"
-            ) from exc
-        return fn(delta_pct, self.alpha)
 
     def max_delta_pct(self, budget: float) -> float:
         """Largest Delta% achievable with ``budget`` (inverse of ``cost``)."""

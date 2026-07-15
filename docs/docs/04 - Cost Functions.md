@@ -24,14 +24,13 @@ $\alpha$ is a per-KPI scale coefficient set in [[Configuration]] (e.g. `alpha: 1
 ## `CostFunctionSpec`
 
 Each KPI gets a `CostFunctionSpec` (built via `from_config` from the YAML), exposing:
-- `cost(delta_pct)` — forward map, Δ% → money.
 - `max_delta_pct(budget)` — inverse map, money → best achievable Δ%.
 
 The registry pattern makes adding new shapes (e.g. asymmetric non-smooth curves for improvement vs. worsening) a matter of registering a pair of forward/inverse functions.
 
 ## Direction of improvement
 
-The Δ% is always applied in the KPI's *improving* direction given its polarity: for `higher_is_better: false` KPIs (e.g. unit production cost), a positive Δ% *reduces* the raw value. `allow_worsening` in the config guards against allocations that would move a KPI the wrong way.
+The Δ% is always applied in the KPI's *improving* direction given its polarity: for `higher_is_better: false` KPIs (e.g. unit production cost), a positive Δ% *reduces* the raw value, so an allocation can never move a KPI the wrong way.
 
 Static $\alpha$ coefficients are a deliberate simplification, and each KPI's cost curve is defined independently of the others — see [[Future Developments]] for the open question of KPIs that are in opposition to each other.
 

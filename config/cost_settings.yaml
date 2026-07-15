@@ -11,7 +11,6 @@ kpi_definitions:
     higher_is_better: true
     cost_function_type: "quadratic"
     alpha: 1500000
-    allow_worsening: false
     drift_noise_std: 0.02      # std dev of per-period random perturbation (fraction of current state)
     passive_decay_rate: -0.01  # mean per-period drift applied when no investment is made
 
@@ -19,6 +18,5 @@ kpi_definitions:
     higher_is_better: false
     cost_function_type: "linear"
     alpha: 800000
-    allow_worsening: false
     drift_noise_std: 0.015
     passive_decay_rate: 0.01   # costs organically creep up 1%/period if untouched

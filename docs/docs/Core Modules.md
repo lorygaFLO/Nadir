@@ -34,7 +34,7 @@ Ingestion & validation → [[Data Format]].
 Investment economics → [[04 - Cost Functions]].
 
 - Registry pairs: `quadratic_cost` / `quadratic_max_delta_pct`, `linear_cost` / `linear_max_delta_pct`.
-- **`CostFunctionSpec`**: `from_config(name, cfg)`, `cost(delta_pct)` (Δ% → money), `max_delta_pct(budget)` (money → Δ%).
+- **`CostFunctionSpec`**: `from_config(name, cfg)`, `max_delta_pct(budget)` (money → Δ%).
 
 ## metrics.py
 

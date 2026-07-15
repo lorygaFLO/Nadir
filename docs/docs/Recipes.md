@@ -110,7 +110,7 @@ python -c "import polars as pl; print(pl.read_csv('data/example_subjects.csv'))"
 
 - **`ModuleNotFoundError: core`** → run from the repo root (imports are `from core.x import ...`), and make sure the right env is active.
 - **`ValueError: missing required column(s)`** → dataset columns must be UPPERCASE and match `kpi_definitions` → [[Data Format]].
-- **Weird optimizer behavior after config edits** → check `allow_worsening` and `alpha` scales in [[Configuration]]; a too-small α makes a KPI "free" and it soaks up the whole budget.
+- **Weird optimizer behavior after config edits** → check `alpha` scales in [[Configuration]]; a too-small α makes a KPI "free" and it soaks up the whole budget.
 - **Non-reproducible runs** → drift is stochastic; fix `random_seed` in [[Configuration]].
 - **Don't search for `positive_cap`** → it was removed; the metric now uses projected gaps ([[03 - Signed Distance Metric]]).
 
