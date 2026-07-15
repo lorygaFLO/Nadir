@@ -1,0 +1,49 @@
+<svg width="220" height="220" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="pathGrad" x1="20" y1="200" x2="160" y2="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#B87A28"/>
+      <stop offset="1" stop-color="#F6CE72"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FCE7B0" stop-opacity="0.95"/>
+      <stop offset="60%" stop-color="#F6CE72" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#F6CE72" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vignette" cx="30%" cy="30%" r="80%">
+      <stop offset="0" stop-color="#1B2540" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#0F1424" stop-opacity="1"/>
+    </radialGradient>
+  </defs>
+
+  <rect x="0" y="0" width="220" height="220" rx="40" fill="url(#vignette)"/>
+
+  <circle cx="140" cy="52" r="42" fill="url(#glow)"/>
+
+  <g stroke="#3C4A66" stroke-width="1.8" fill="none" opacity="0.8">
+    <line x1="64" y1="188" x2="150" y2="168"/>
+    <line x1="100" y1="156" x2="150" y2="168"/>
+    <line x1="150" y1="168" x2="154" y2="126"/>
+    <line x1="154" y1="126" x2="140" y2="52"/>
+  </g>
+
+  <g stroke="url(#pathGrad)" fill="none" stroke-linecap="round">
+    <line x1="64" y1="188" x2="100" y2="156" stroke-width="4.2"/>
+    <line x1="100" y1="156" x2="90" y2="118" stroke-width="4.2"/>
+    <line x1="90" y1="118" x2="118" y2="82" stroke-width="4.2"/>
+    <line x1="118" y1="82" x2="140" y2="52" stroke-width="4.2"/>
+  </g>
+
+  <g fill="#3C4A66">
+    <circle cx="150" cy="168" r="5.5"/>
+    <circle cx="154" cy="126" r="5.5"/>
+  </g>
+
+  <g fill="url(#pathGrad)">
+    <circle cx="100" cy="156" r="6.5"/>
+    <circle cx="90" cy="118" r="6.5"/>
+    <circle cx="118" cy="82" r="6.5"/>
+  </g>
+
+  <circle cx="64" cy="188" r="8.5" fill="#131A2B" stroke="#F6CE72" stroke-width="2.4"/>
+  <circle cx="140" cy="52" r="9.5" fill="#FCE7B0"/>
+</svg>

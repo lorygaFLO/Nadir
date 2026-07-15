@@ -17,7 +17,7 @@ where $D$ is the [[03 - Signed Distance Metric]] evaluated against the current c
 `optimize_allocation` in [`core/optimizer.py`](../../core/optimizer.py) does a **greedy grid search**: it enumerates a lattice of weight vectors on the simplex (`_simplex_grid`, resolution adapted to dimensionality by `_grid_resolution`) and evaluates $D$ for each candidate next state.
 
 > [!warning] Myopic by design
-> This is a *single-step lookahead* — it maximizes next-period $D$ only. It can be short-sighted when a KPI needs sustained multi-period investment to pay off. The full **multi-period MPC planner** (differentiable, PyTorch/JAX) is Phase 2 and not yet built.
+> This is a *single-step lookahead* — it maximizes next-period $D$ only. It can be short-sighted when a KPI needs sustained multi-period investment to pay off. It also optimizes each KPI independently — see [[Future Developments]] for the open question of KPIs that are in opposition to each other.
 
 ## Counterfactual simulation
 

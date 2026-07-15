@@ -57,8 +57,4 @@ flowchart TD
 - `optimizer.py` composes metrics + cost functions; `simulation.py` composes everything; `viz.py` is a pure consumer.
 - Notebooks and tests sit on top and never get imported by `core/`.
 
-## Where Phase 2 will plug in
-
-- `cost_functions.py` registry → replaced/extended by a learned dynamic-cost model.
-- `optimizer.py` → swapped for a differentiable multi-period MPC planner.
-- A new interdependency model will sit between the allocation and the state transition inside `simulate_history`.
+See [[Future Developments]] for an open modeling question (KPIs in opposition to each other) not yet addressed by this layout.

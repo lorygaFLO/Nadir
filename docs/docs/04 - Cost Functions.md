@@ -33,8 +33,6 @@ The registry pattern makes adding new shapes (e.g. asymmetric non-smooth curves 
 
 The Δ% is always applied in the KPI's *improving* direction given its polarity: for `higher_is_better: false` KPIs (e.g. unit production cost), a positive Δ% *reduces* the raw value. `allow_worsening` in the config guards against allocations that would move a KPI the wrong way.
 
-## Phase 2 outlook
-
-Static $\alpha$ coefficients are a Phase 1 simplification. Phase 2 plans **dynamic cost estimation**: a predictive model adjusting marginal costs based on saturation (the closer to a physical ceiling, the more each % costs) and historical constraints — see [[01 - Project Overview#Phases]].
+Static $\alpha$ coefficients are a deliberate simplification, and each KPI's cost curve is defined independently of the others — see [[Future Developments]] for the open question of KPIs that are in opposition to each other.
 
 → Next: [[05 - Optimization and Simulation]]

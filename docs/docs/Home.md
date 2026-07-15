@@ -5,7 +5,7 @@ aliases: [Index, Map of Content]
 
 # 🏠 Nadir Vault — Home
 
-**Nadir** is a geometric & predictive Decision Support System (DSS): it maps competitor performance profiles with **posets** (partially ordered sets), measures how far the *focus subject* is from the Pareto frontier, and simulates **multi-period budget allocations** to close that gap at minimum cost.
+**Nadir** is a geometric Decision Support System (DSS): it maps competitor performance profiles with **posets** (partially ordered sets), measures how far the *focus subject* is from the Pareto frontier, and simulates **multi-period budget allocations** to close that gap at minimum cost.
 
 > [!question] The core question
 > *"If we control the levers of specific KPIs, how should we schedule investments over time to beat competitors or reach the Pareto frontier at the lowest possible cost?"*
@@ -27,6 +27,7 @@ aliases: [Index, Map of Content]
 
 ### Practical
 - [[Recipes]] — 🍳 ready-made commands: venvs (conda & vanilla), running notebooks, tests, etc.
+- [[Future Developments]] — 🔮 open modeling questions not yet addressed
 
 ## 🚦 Quick start
 
@@ -37,7 +38,4 @@ aliases: [Index, Map of Content]
 
 ## Status
 
-| Layer | Status |
-|---|---|
-| Phase 1 — Geometric-deterministic (poset, cost curves, greedy optimizer, simulation) | ✅ Built |
-| Phase 2 — Predictive/causal (NN interdependencies, dynamic costs, MPC planner) | 🔮 Planned |
+The geometric-deterministic core (poset, cost curves, greedy optimizer, simulation) is built. How to handle KPIs that are in opposition to each other is still an open question — see [[Future Developments]].
