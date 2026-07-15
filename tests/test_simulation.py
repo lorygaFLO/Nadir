@@ -45,7 +45,7 @@ def _run(budget=50_000.0, jitter=0.01, horizon=5, seed=1, weights=None, adaptive
         cost_specs=COST_SPECS,
         initial_states=INITIAL,
         focus_subject="Focus",
-        annual_budget=budget,
+        period_budget=budget,
         horizon=horizon,
         seed=seed,
         jitter_std=jitter,
@@ -106,7 +106,7 @@ class TestSimulateHistory:
                 cost_specs=COST_SPECS[:1],
                 initial_states=INITIAL,
                 focus_subject="Focus",
-                annual_budget=10_000.0,
+                period_budget=10_000.0,
                 horizon=2,
                 seed=1,
             )
@@ -121,7 +121,7 @@ class TestSimulateHistory:
             cost_specs=COST_SPECS,
             initial_states=INITIAL,
             focus_subject="Focus",
-            annual_budget=50_000.0,
+            period_budget=50_000.0,
             horizon=4,
             seed=1,
         )
@@ -131,7 +131,7 @@ class TestSimulateHistory:
             "UNIT_PRODUCTION_COST",
         ]
         assert allocations.height == 4
-        # Static equal split: each KPI gets half the budget every year.
+        # Static equal split: each KPI gets half the budget every period.
         assert allocations["MARKET_SHARE_PCT"].to_list() == [25_000.0] * 4
 
     def test_adaptive_reroutes_budget_to_lagging_kpi(self) -> None:
@@ -146,14 +146,14 @@ class TestSimulateHistory:
             cost_specs=COST_SPECS,
             initial_states=states,
             focus_subject="Focus",
-            annual_budget=50_000.0,
+            period_budget=50_000.0,
             horizon=3,
             seed=1,
             jitter_std=None,
             adaptive=True,
         )
-        first_year = allocations.filter(pl.col(TIME_COL) == 1)
-        assert first_year["UNIT_PRODUCTION_COST"].item() >= 45_000.0
+        first_period = allocations.filter(pl.col(TIME_COL) == 1)
+        assert first_period["UNIT_PRODUCTION_COST"].item() >= 45_000.0
 
     def test_adaptive_eventually_dominates_rival(self) -> None:
         # Incomparable start: Focus leads share, lags cost. The adaptive
@@ -167,7 +167,7 @@ class TestSimulateHistory:
             cost_specs=COST_SPECS,
             initial_states=states,
             focus_subject="Focus",
-            annual_budget=50_000.0,
+            period_budget=50_000.0,
             horizon=15,
             seed=1,
             jitter_std=None,

@@ -76,7 +76,7 @@ class TestForwardFill:
         a1 = df.filter((pl.col("SUBJECT") == "A") & (pl.col("TIME") == 1))
         assert a1["MARKET_SHARE_PCT"].item() == 10.0  # carried from t=0
 
-    def test_missing_year_row_completed(self, tmp_path: Path) -> None:
+    def test_missing_period_row_completed(self, tmp_path: Path) -> None:
         data = {
             "SUBJECT": ["A", "B", "A"],  # B has no row at t=1
             "TIME": [0, 0, 1],

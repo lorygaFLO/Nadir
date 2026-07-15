@@ -172,7 +172,7 @@ def plot_allocations(
     currency: str = "EUR",
     t: int | None = None,
 ) -> go.Figure:
-    """Stacked bars of yearly budget deployment per KPI (planning stream).
+    """Stacked bars of per-period budget deployment per KPI (planning stream).
 
     Restricted to periods up to ``t`` when provided, mirroring
     ``plot_kpi_plane``'s trail truncation so the chart stays in sync with
@@ -192,7 +192,7 @@ def plot_allocations(
         )
     fig.update_layout(
         barmode="stack",
-        title=f"Planned budget deployment ({currency}/year)",
+        title=f"Planned budget deployment ({currency}/period)",
         xaxis_title="Period t",
         yaxis_title=f"Budget ({currency})",
         plot_bgcolor="white",

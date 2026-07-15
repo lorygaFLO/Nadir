@@ -1,8 +1,8 @@
 simulation_settings:
   currency: "EUR"
-  time_horizon_years: 100
+  time_horizon_periods: 100
   random_seed: 42
-  annual_budget: 50000   # default yearly investment for the Focus subject
+  period_budget: 50000   # default per-period investment for the Focus subject
 
 # KPI definitions are fully generic: add as many entries as needed.
 # Phase 1 activates only the two below, but the engine handles any number.
@@ -12,8 +12,8 @@ kpi_definitions:
     cost_function_type: "quadratic"
     alpha: 1500000
     allow_worsening: false
-    drift_noise_std: 0.02      # std dev of annual random perturbation (fraction of current state)
-    passive_decay_rate: -0.01  # mean annual drift applied when no investment is made
+    drift_noise_std: 0.02      # std dev of per-period random perturbation (fraction of current state)
+    passive_decay_rate: -0.01  # mean per-period drift applied when no investment is made
 
   unit_production_cost:
     higher_is_better: false
@@ -21,4 +21,4 @@ kpi_definitions:
     alpha: 800000
     allow_worsening: false
     drift_noise_std: 0.015
-    passive_decay_rate: 0.01   # costs organically creep up 1%/year if untouched
+    passive_decay_rate: 0.01   # costs organically creep up 1%/period if untouched

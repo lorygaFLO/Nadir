@@ -12,7 +12,7 @@ Unlike traditional static benchmarking tools, Nadir acts as a **Geometric Model 
 
 ### 1. Geometric-Deterministic Layer (Phase 1)
 * **Poset-Based Dominance:** Subjects are evaluated across $n$-dimensional quantitative KPIs. The system builds transitively reduced Hasse diagrams to isolate Pareto-optimal maximal elements.
-* **Multi-Period State Variables:** Differentiates between cumulative state variables (KPI levels) and annual flow variables (investment costs) to model continuous progress without repetitive maintenance penalties.
+* **Multi-Period State Variables:** Differentiates between cumulative state variables (KPI levels) and per-period flow variables (investment costs) to model continuous progress without repetitive maintenance penalties.
 * **Custom Cost Curves:** Supports user-defined smooth quadratic ($\alpha u^2$) and asymmetric non-smooth cost functions to simulate diminishing marginal returns and realistic asset decay.
 * **Mathematical Optimization:** Formulates target-tracking or frontier-entry trajectories through non-linear mathematical programming (including MILP/MINLP formulations for disjunctive Pareto constraints).
 

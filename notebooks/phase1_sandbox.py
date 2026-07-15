@@ -64,10 +64,10 @@ def _(CostFunctionSpec, KpiSpec, project_root, yaml):
         CostFunctionSpec.from_config(name, cfg)
         for name, cfg in config["kpi_definitions"].items()
     ]
-    time_horizon = int(sim_settings["time_horizon_years"])
+    time_horizon = int(sim_settings["time_horizon_periods"])
     random_seed = int(sim_settings["random_seed"])
     currency = str(sim_settings.get("currency", "EUR"))
-    default_budget = float(sim_settings.get("annual_budget", 50000.0))
+    default_budget = float(sim_settings.get("period_budget", 50000.0))
     return (
         cost_specs,
         currency,
@@ -83,33 +83,16 @@ def _(currency, default_budget, kpi_specs, mo):
     n_subjects_slider = mo.ui.slider(
         4, 20, value=8, step=1, label="Number of synthetic subjects"
     )
-    # Budget-driven improvement: the yearly step is derived from the budget
+    # Budget-driven improvement: the per-period step is derived from the budget
     # through the inverse cost functions, not chosen directly.
     budget_input = mo.ui.text(
         value=f"{default_budget:g}",
-        label=f"Annual budget ({currency}) — one value, or comma-separated per year",
+        label=f"Budget per period ({currency}) — one value, or comma-separated per period",
         full_width=True,
     )
-    # Allocation policy: adaptive re-optimizes the split every period on the
-    # signed distance metric D; manual keeps the sliders' static shares.
-    allocation_policy = mo.ui.dropdown(
-        ["adaptive (optimizer)", "manual weights"],
-        value="adaptive (optimizer)",
-        label="Allocation policy",
-    )
-    # One allocation slider per KPI (manual policy only; normalized to sum to 1).
-    allocation_sliders = mo.ui.dictionary(
-        {
-            spec.name: mo.ui.slider(
-                0.0,
-                1.0,
-                value=round(1.0 / len(kpi_specs), 2),
-                step=0.01,
-                label=f"Budget share — {spec.name}",
-            )
-            for spec in kpi_specs
-        }
-    )
+    # Allocation is always adaptive: the optimizer re-derives the per-KPI
+    # budget split every period from the signed distance metric D and the
+    # effort (cost) required to move each KPI — no manual weights needed.
     jitter_slider = mo.ui.slider(
         0.0, 0.05, value=0.01, step=0.005, label="Competitor jitter σ"
     )
@@ -126,15 +109,11 @@ def _(currency, default_budget, kpi_specs, mo):
             mo.md("## Phase 1 Sandbox — Poset Engine Validation"),
             n_subjects_slider,
             budget_input,
-            allocation_policy,
-            allocation_sliders,
             jitter_slider,
             mo.hstack([x_kpi_dropdown, y_kpi_dropdown], justify="start"),
         ]
     )
     return (
-        allocation_policy,
-        allocation_sliders,
         budget_input,
         jitter_slider,
         n_subjects_slider,
@@ -160,8 +139,6 @@ def _(PosetEngine, kpi_specs, n_subjects_slider, np, random_seed):
 
 @app.cell
 def _(
-    allocation_policy,
-    allocation_sliders,
     budget_input,
     cost_specs,
     focus_subject,
@@ -173,7 +150,7 @@ def _(
     simulate_history,
     time_horizon,
 ):
-    # Parse the budget: a single value or a comma-separated per-year schedule.
+    # Parse the budget: a single value or a comma-separated per-period schedule.
     try:
         _parts = [
             float(x)
@@ -186,14 +163,7 @@ def _(
         not _parts,
         mo.md("⚠️ **Invalid budget** — enter a number or a comma-separated list."),
     )
-    annual_budget = _parts[0] if len(_parts) == 1 else _parts
-
-    _adaptive = str(allocation_policy.value).startswith("adaptive")
-    _weights = {k: float(v) for k, v in allocation_sliders.value.items()}
-    mo.stop(
-        not _adaptive and sum(_weights.values()) <= 0,
-        mo.md("⚠️ Allocate at least one positive budget share."),
-    )
+    period_budget = _parts[0] if len(_parts) == 1 else _parts
 
     # Simulate T periods: Focus invests the budget, competitors get seeded jitter.
     history_df, allocations_df = simulate_history(
@@ -201,14 +171,14 @@ def _(
         cost_specs=cost_specs,
         initial_states=initial_states,
         focus_subject=focus_subject,
-        annual_budget=annual_budget,
+        period_budget=period_budget,
         horizon=time_horizon,
         seed=random_seed,
         jitter_std=float(jitter_slider.value),
-        allocation_weights=None if _adaptive else _weights,
-        adaptive=_adaptive,
+        allocation_weights=None,
+        adaptive=True,
     )
-    return allocations_df, annual_budget, history_df
+    return allocations_df, history_df, period_budget
 
 
 @app.cell
@@ -275,7 +245,7 @@ def _(
 
 @app.cell
 def _(allocations_df, currency, kpi_specs, mo, period_slider, plot_allocations):
-    # Planning stream: how the budget is actually deployed year by year,
+    # Planning stream: how the budget is actually deployed period by period,
     # truncated to the period selected above.
     mo.ui.plotly(
         plot_allocations(
@@ -287,22 +257,22 @@ def _(allocations_df, currency, kpi_specs, mo, period_slider, plot_allocations):
 
 @app.cell
 def _(
-    annual_budget,
     currency,
     focus_subject,
     history_df,
     kpi_specs,
     mo,
+    period_budget,
     resolve_budget_schedule,
     time_horizon,
     time_to_frontier,
 ):
     _reach = time_to_frontier(history_df, kpi_specs, focus_subject)
-    _budgets = resolve_budget_schedule(annual_budget, time_horizon)
+    _budgets = resolve_budget_schedule(period_budget, time_horizon)
     if _reach is None:
         _msg = (
             f"❌ **Goal not reached.** `{focus_subject}` never enters the Pareto "
-            f"frontier within {time_horizon} years, despite a total investment of "
+            f"frontier within {time_horizon} periods, despite a total investment of "
             f"{sum(_budgets):,.0f} {currency}. Increase the budget, rebalance the "
             "allocation, or extend the horizon."
         )
@@ -313,7 +283,7 @@ def _(
         )
     else:
         _msg = (
-            f"🎯 **Goal reached in {_reach} year{'s' if _reach > 1 else ''}.** "
+            f"🎯 **Goal reached in period {_reach}.** "
             f"`{focus_subject}` enters the Pareto frontier at t={_reach}, after a "
             f"cumulative investment of {sum(_budgets[:_reach]):,.0f} {currency}."
         )

@@ -86,7 +86,7 @@ def _(
         _fig.update_layout(
             title=f"{_name.capitalize()} cost function",
             xaxis_title="Delta% (percentage variance)",
-            yaxis_title="Cost (currency/year)",
+            yaxis_title="Cost (currency/period)",
             height=350,
             margin={"t": 60, "b": 40},
         )

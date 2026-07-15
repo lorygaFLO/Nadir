@@ -57,7 +57,7 @@ Per-period budget split → [[05 - Optimization and Simulation]].
 
 Scenario runner → [[05 - Optimization and Simulation]].
 
-- `resolve_budget_schedule(...)` — constant or per-year budget list over the horizon.
+- `resolve_budget_schedule(...)` — constant or per-period budget list over the horizon.
 - `simulate_history(...)` — the main loop (focus invests adaptively or with static weights; competitors drift). Returns `(history, allocations)` Polars DataFrames.
 - `time_to_frontier(...)` — first period the focus subject is Pareto-maximal, or none.
 

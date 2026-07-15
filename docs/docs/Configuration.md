@@ -11,9 +11,9 @@ Everything is driven by [`config/cost_settings.yaml`](../../config/cost_settings
 | Key | Example | Meaning |
 |---|---|---|
 | `currency` | `"EUR"` | Display currency for costs/budgets |
-| `time_horizon_years` | `100` | Number of simulated periods $T$ |
+| `time_horizon_periods` | `100` | Number of simulated periods $T$ |
 | `random_seed` | `42` | Seed for the drift RNG — fixes the stochastic scenario for reproducibility |
-| `annual_budget` | `50000` | Default yearly investment for the focus subject (can be overridden with a per-year schedule, see `resolve_budget_schedule` in [[Core Modules#simulation py|simulation.py]]) |
+| `period_budget` | `50000` | Default per-period investment for the focus subject (can be overridden with a per-period schedule, see `resolve_budget_schedule` in [[Core Modules#simulation py|simulation.py]]) |
 
 ## `kpi_definitions`
 
@@ -25,8 +25,8 @@ market_share_pct:
   cost_function_type: "quadratic"
   alpha: 1500000              # cost scale coefficient
   allow_worsening: false
-  drift_noise_std: 0.02       # σ of annual random perturbation (fraction of state)
-  passive_decay_rate: -0.01   # mean annual drift when no investment is made
+  drift_noise_std: 0.02       # σ of per-period random perturbation (fraction of state)
+  passive_decay_rate: -0.01   # mean per-period drift when no investment is made
 ```
 
 | Key | Consumed by | Notes |
@@ -36,7 +36,7 @@ market_share_pct:
 | `alpha` | cost curves | Bigger α ⇒ each Δ% costs more |
 | `allow_worsening` | optimizer/simulation guard | Blocks allocations that move the KPI the wrong way |
 | `drift_noise_std` | `PosetEngine.apply_drift` | Std-dev of the stochastic jitter, as fraction of current value |
-| `passive_decay_rate` | `PosetEngine.apply_drift` | Mean drift with **no** investment. Sign is in *raw value space*: `-0.01` on a higher-is-better KPI = erosion; `+0.01` on unit cost = costs creep up 1%/year |
+| `passive_decay_rate` | `PosetEngine.apply_drift` | Mean drift with **no** investment. Sign is in *raw value space*: `-0.01` on a higher-is-better KPI = erosion; `+0.01` on unit cost = costs creep up 1%/period |
 
 > [!tip] Interpreting `passive_decay_rate`
 > It models "the world doesn't stand still": market share slowly bleeds away, costs inflate. It's what makes *doing nothing* an actively losing strategy in the simulation.

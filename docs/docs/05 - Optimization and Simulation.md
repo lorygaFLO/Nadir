@@ -6,7 +6,7 @@ tags: [theory, nadir, optimization, simulation]
 
 ## The per-period allocation problem
 
-At each period the focus subject holds a yearly budget $B_t$ and must split it across $n$ KPIs with weights $w$ on the **simplex** ($w_i \ge 0$, $\sum w_i = 1$). Each slice $w_i B_t$ buys a KPI improvement via the inverse [[04 - Cost Functions|cost function]], producing a candidate next state. The optimizer picks:
+At each period the focus subject holds a period budget $B_t$ and must split it across $n$ KPIs with weights $w$ on the **simplex** ($w_i \ge 0$, $\sum w_i = 1$). Each slice $w_i B_t$ buys a KPI improvement via the inverse [[04 - Cost Functions|cost function]], producing a candidate next state. The optimizer picks:
 
 $$w^\star = \arg\max_{w \in \Delta^{n-1}} D\big(\text{next\_state}(w)\big)$$
 
@@ -17,7 +17,7 @@ where $D$ is the [[03 - Signed Distance Metric]] evaluated against the current c
 `optimize_allocation` in [`core/optimizer.py`](../../core/optimizer.py) does a **greedy grid search**: it enumerates a lattice of weight vectors on the simplex (`_simplex_grid`, resolution adapted to dimensionality by `_grid_resolution`) and evaluates $D$ for each candidate next state.
 
 > [!warning] Myopic by design
-> This is a *single-step lookahead* — it maximizes next-period $D$ only. It can be short-sighted when a KPI needs sustained multi-year investment to pay off. The full **multi-period MPC planner** (differentiable, PyTorch/JAX) is Phase 2 and not yet built.
+> This is a *single-step lookahead* — it maximizes next-period $D$ only. It can be short-sighted when a KPI needs sustained multi-period investment to pay off. The full **multi-period MPC planner** (differentiable, PyTorch/JAX) is Phase 2 and not yet built.
 
 ## Counterfactual simulation
 
@@ -32,11 +32,11 @@ for t in 1..T:
     3. Snapshot the poset state
 ```
 
-It returns two DataFrames: **history** (every subject's KPI values per period) and **allocations** (the focus subject's budget split per period). `resolve_budget_schedule` lets the annual budget be a constant or a per-year schedule.
+It returns two DataFrames: **history** (every subject's KPI values per period) and **allocations** (the focus subject's budget split per period). `resolve_budget_schedule` lets the period budget be a constant or a per-period schedule.
 
 ## Reaching the frontier
 
-`time_to_frontier(history, ...)` scans the simulated history and returns the **first period where the focus subject is a maximal element** of the poset (Pareto frontier, see [[02 - Posets and Pareto Dominance]]) — the headline KPI of a scenario: *"with this budget and these cost curves, we enter the frontier in year k."*
+`time_to_frontier(history, ...)` scans the simulated history and returns the **first period where the focus subject is a maximal element** of the poset (Pareto frontier, see [[02 - Posets and Pareto Dominance]]) — the headline KPI of a scenario: *"with this budget and these cost curves, we enter the frontier in period k."*
 
 ## Visual outputs
 

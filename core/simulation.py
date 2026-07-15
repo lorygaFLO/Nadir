@@ -3,10 +3,10 @@
 Produces a tidy history DataFrame with the same wide schema used by
 ``core.dataset``: SUBJECT | TIME | <KPI_1> | ... | <KPI_n> (uppercase).
 
-The focus subject's annual KPI step is **not** chosen directly: each
-period an annual budget is split across KPIs (via allocation weights)
-and converted into the largest affordable Delta% through the inverse
-cost functions (see ``core.cost_functions``).
+The focus subject's per-period KPI step is **not** chosen directly: each
+period a budget is split across KPIs (via allocation weights) and
+converted into the largest affordable Delta% through the inverse cost
+functions (see ``core.cost_functions``).
 """
 
 from __future__ import annotations
@@ -24,18 +24,18 @@ from core.poset import KpiSpec, PosetEngine
 
 
 def resolve_budget_schedule(
-    annual_budget: float | Sequence[float], horizon: int
+    period_budget: float | Sequence[float], horizon: int
 ) -> list[float]:
-    """Normalize a fixed or per-year budget into one value per period.
+    """Normalize a fixed or per-period budget into one value per period.
 
     A scalar is repeated for every period. A sequence shorter than the
     horizon is extended with its last value; a longer one is truncated.
     """
-    if isinstance(annual_budget, (int, float)):
-        return [float(annual_budget)] * horizon
-    schedule = [float(b) for b in annual_budget]
+    if isinstance(period_budget, (int, float)):
+        return [float(period_budget)] * horizon
+    schedule = [float(b) for b in period_budget]
     if not schedule:
-        raise ValueError("annual_budget sequence is empty.")
+        raise ValueError("period_budget sequence is empty.")
     if len(schedule) < horizon:
         schedule += [schedule[-1]] * (horizon - len(schedule))
     return schedule[:horizon]
@@ -65,16 +65,18 @@ def simulate_history(
     cost_specs: Sequence[CostFunctionSpec],
     initial_states: Mapping[str, np.ndarray],
     focus_subject: str,
-    annual_budget: float | Sequence[float],
+    period_budget: float | Sequence[float],
     horizon: int,
     seed: int,
     jitter_std: float | None = None,
     allocation_weights: Mapping[str, float] | None = None,
     adaptive: bool = False,
+    competitor_history: pl.DataFrame | None = None,
+    history_start_time: int = 0,
 ) -> tuple[pl.DataFrame, pl.DataFrame]:
     """Simulate ``horizon`` periods; return ``(history, allocations)``.
 
-    Each period the focus subject spends that year's budget: the amount
+    Each period the focus subject spends that period's budget: the amount
     allocated to each KPI is converted into the largest affordable
     Delta% through the KPI's inverse cost function and applied in the
     favourable direction.
@@ -85,9 +87,17 @@ def simulate_history(
     Otherwise the static ``allocation_weights`` (default equal split)
     are used throughout.
 
-    Every other subject receives seeded Gaussian jitter with std
-    ``jitter_std`` and no passive decay; ``jitter_std=None`` (or ``0``)
-    keeps competitors constant.
+    Every other subject moves according to ``competitor_history`` when
+    given: a wide ``SUBJECT | TIME | <KPI...>`` dataframe (e.g. the raw
+    user dataset) supplying each competitor's *actual* recorded values
+    for a period, taking priority over synthetic movement. Simulation
+    period ``t`` (1-indexed) is looked up against absolute
+    ``TIME == history_start_time + t`` (default 0, i.e. the dataframe's
+    own period numbering); set it to the initial snapshot's observed
+    TIME so simulated periods map to genuinely future rows. Periods/
+    subjects with no match (or when ``competitor_history`` is omitted)
+    fall back to seeded Gaussian jitter with std ``jitter_std`` and no
+    passive decay; ``jitter_std=None`` (or ``0``) keeps them constant.
 
     ``allocations`` has one row per period: TIME plus the budget amount
     spent on each (uppercase) KPI column.
@@ -98,7 +108,15 @@ def simulate_history(
         raise ValueError(f"No cost function spec for KPI(s): {missing}.")
 
     weights = _normalized_weights(kpi_specs, allocation_weights)
-    budgets = resolve_budget_schedule(annual_budget, horizon)
+    budgets = resolve_budget_schedule(period_budget, horizon)
+
+    competitor_lookup: dict[tuple[str, int], np.ndarray] = {}
+    if competitor_history is not None:
+        kpi_cols = [spec.name.upper() for spec in kpi_specs]
+        for row in competitor_history.iter_rows(named=True):
+            competitor_lookup[(row[SUBJECT_COL], int(row[TIME_COL]))] = np.array(
+                [row[c] for c in kpi_cols], dtype=float
+            )
 
     rng = np.random.default_rng(seed)
     sim_specs = [
@@ -149,7 +167,11 @@ def simulate_history(
                     current[idx] *= 1.0 + direction * delta_pct
                 engine.set_subject(name, current)
             else:
-                engine.apply_drift(name, rng)
+                known = competitor_lookup.get((name, history_start_time + t))
+                if known is not None:
+                    engine.set_subject(name, known)
+                else:
+                    engine.apply_drift(name, rng)
         snapshot(t)
 
     history = pl.DataFrame(rows).sort([TIME_COL, SUBJECT_COL])
