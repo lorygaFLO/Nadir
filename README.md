@@ -36,6 +36,22 @@ Ideas that go beyond this scope are tracked separately in [Future Developments](
 
 ---
 
-## 🛠️ Tech Stack
+## �️ Two Views of the Same Problem
+
+Nadir looks at the same subjects through two complementary lenses: an **order-theoretic** view (who dominates whom) and a **geometric** one (where everyone sits on the KPI plane). Both are automatically derived from the same subject data.
+
+<p align="center">
+  <img src="docs/assets/hasse_diagram.png" alt="Hasse diagram of Pareto dominance" width="90%"/>
+</p>
+
+<p align="center">
+  <img src="docs/assets/trajectory_plot.png" alt="KPI plane with Pareto frontier and trajectory" width="90%"/>
+</p>
+
+In this toy example, `Atlas`, `Orion`, `Vega` and `Us` sit on the **Pareto frontier** — none of them is beaten on *both* KPIs at once — while everyone else is dominated by at least one of them. The red trajectory shows `Us` closing the gap to the frontier period by period, exactly the kind of counterfactual path Nadir is built to plan and cost.
+
+---
+
+## �🛠️ Tech Stack
 * **Optimization & Modeling:** Python (SciPy, Pyomo, IPOPT)
 * **Data & Graph Structures:** NetworkX, Polars / Pandas
